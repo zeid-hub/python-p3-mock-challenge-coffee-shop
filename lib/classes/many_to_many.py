@@ -1,133 +1,78 @@
-# class Coffee:
-#     def __init__(self, name):
-#         self.name = name
-        
-#     def orders(self):
-#         pass
-    
-#     def customers(self):
-#         pass
-    
-#     def num_orders(self):
-#         pass
-    
-#     def average_price(self):
-#         pass
-
-# class Customer:
-#     def __init__(self, name):
-#         self.name = name
-        
-#     def orders(self):
-#         pass
-    
-#     def coffees(self):
-#         pass
-    
-#     def create_order(self, coffee, price):
-#         pass
-    
-# class Order:
-#     def __init__(self, customer, coffee, price):
-#         self.customer = customer
-#         self.coffee = coffee
-#         self.price = price
-
-# class Coffee:
-#     def __init__(self, name):
-#         self.name = name
-#         self._orders = []
-
-#     def orders(self):
-#         return self._orders
-
-#     def customers(self):
-#         return list(set(order.customer for order in self._orders))
-
-#     def num_orders(self):
-#         return len(self._orders)
-
-#     def average_price(self):
-#         if not self._orders:
-#             return 0
-#         total_price = sum(order.price for order in self._orders)
-#         return total_price / len(self._orders)
-
-
-# class Customer:
-#     def __init__(self, name):
-#         self.name = name
-#         self._orders = []
-
-#     def orders(self):
-#         return self._orders
-
-#     def coffees(self):
-#         return list(set(order.coffee for order in self._orders))
-
-#     def create_order(self, coffee, price):
-#         order = Order(self, coffee, price)
-#         self._orders.append(order)
-#         return order
-
-
-class Order:
-    def __init__(self, customer, coffee, price):
-        self.customer = customer
-        self.coffee = coffee
-        self.price = price
-
-        customer._orders.append(self)
-        coffee._orders.append(self)
-
-
-
 class Coffee:
     def __init__(self, name):
-        if not isinstance(name, str) or len(name) < 3:
-            raise ValueError("Invalid name for coffee")
-        self._name = name
-        self._orders = []
+        # Set the name using the property setter
+        self.name = name
 
-    @property
-    def name(self):
+    def get_name(self):
         return self._name
 
+    def set_name(self, name):
+        if isinstance(name, str) and 3 <= len(name) <= 15:  # Update condition for name length
+            self._name = name
+        else:
+            raise ValueError("Invalid name for coffee")
+
+    name = property(get_name, set_name)
+
     def orders(self):
-        return self._orders
+        return [order for order in Order.all if order.coffee == self]
 
     def customers(self):
-        return list(set(order.customer for order in self._orders))
+        return list(set([order.customer for order in self.orders()]))
 
     def num_orders(self):
-        return len(self._orders)
+        return len(self.orders())
 
     def average_price(self):
-        if not self._orders:
+        if len(self.orders()) == 0:
             return 0
-        total_price = sum(order.price for order in self._orders)
-        return total_price / len(self._orders)
-
+        total = sum([order.price for order in self.orders()])
+        return total / len(self.orders())
 
 class Customer:
     def __init__(self, name):
-        if not isinstance(name, str) or not (1 <= len(name) <= 15):
-            raise ValueError("Invalid name for customer")
-        self._name = name
-        self._orders = []
+        # Set the name using the property setter
+        self.name = name
 
-    @property
-    def name(self):
+    def get_name(self):
         return self._name
 
+    def set_name(self, name):
+        if isinstance(name, str) and 1 <= len(name) <= 15:  # Update condition for name length
+            self._name = name
+        else:
+            raise ValueError("Invalid name for customer")
+
+    name = property(get_name, set_name)
+
     def orders(self):
-        return self._orders
+        return [order for order in Order.all if order.customer == self]
 
     def coffees(self):
-        return list(set(order.coffee for order in self._orders))
+        return list(set([order.coffee for order in self.orders()]))
 
     def create_order(self, coffee, price):
-        order = Order(self, coffee, price)
-        self._orders.append(order)
-        return order
+        if not isinstance(coffee, Coffee) or not isinstance(price, (int, float)):
+            raise ValueError("Invalid input for creating an order")
 
+        new_order = Order(self, coffee, price)
+        return new_order
+
+class Order:
+    all = []
+
+    def __init__(self, customer, coffee, price):
+        if not isinstance(customer, Customer) or not isinstance(coffee, Coffee) or not isinstance(price, (int, float)):
+            raise ValueError("Invalid input for creating an order")
+
+        if not (1.0 <= price <= 10.0):
+            raise ValueError("Price must be between 1.0 and 10.0, inclusive")
+
+        self.customer = customer
+        self.coffee = coffee
+        self.price = price
+        Order.all.append(self)
+
+    @classmethod
+    def clear_all(cls):
+        cls.all = []
